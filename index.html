@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Match do Amor da Turma ❤️</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: linear-gradient(135deg, #1b0028, #5c0036, #ff2f6d);
+    min-height: 100vh;
+    color: white;
+    text-align: center;
+    overflow-x: hidden;
+}
+
+.container {
+    width: 92%;
+    max-width: 800px;
+    margin: 30px auto;
+    background: rgba(0, 0, 0, 0.45);
+    padding: 25px;
+    border-radius: 20px;
+    box-shadow: 0 0 25px rgba(255,255,255,0.2);
+}
+
+h1 {
+    font-size: 36px;
+    margin-bottom: 5px;
+}
+
+p {
+    font-size: 18px;
+}
+
+input[type="text"] {
+    width: 90%;
+    max-width: 400px;
+    padding: 12px;
+    border-radius: 10px;
+    border: none;
+    font-size: 18px;
+    margin: 15px 0;
+    text-align: center;
+}
+
+.caracteristicas {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.opcao {
+    background: rgba(255,255,255,0.12);
+    border: 2px solid rgba(255,255,255,0.3);
+    padding: 15px;
+    border-radius: 15px;
+    cursor: pointer;
+    transition: 0.2s;
+    font-size: 17px;
+}
+
+.opcao:hover {
+    transform: scale(1.04);
+    background: rgba(255,255,255,0.25);
+}
+
+.opcao input {
+    display: none;
+}
+
+.opcao.selecionada {
+    background: #ff2f6d;
+    border-color: white;
+    box-shadow: 0 0 15px #ffb6c1;
+}
+
+button {
+    margin-top: 25px;
+    padding: 15px 30px;
+    border: none;
+    border-radius: 30px;
+    background: white;
+    color: #c00048;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+button:hover {
+    transform: scale(1.05);
+    background: #ffe1ea;
+}
+
+#resultado {
+    margin-top: 30px;
+    display: none;
+}
+
+.card {
+    background: rgba(255,255,255,0.15);
+    border: 2px solid rgba(255,255,255,0.25);
+    border-radius: 18px;
+    padding: 18px;
+    margin: 15px 0;
+}
+
+.primeiro {
+    background: rgba(255, 47, 109, 0.8);
+    box-shadow: 0 0 20px #ffb6c1;
+}
+
+.barra {
+    width: 100%;
+    height: 18px;
+    background: rgba(255,255,255,0.25);
+    border-radius: 20px;
+    overflow: hidden;
+    margin-top: 10px;
+}
+
+.progresso {
+    height: 100%;
+    background: white;
+    width: 0%;
+    transition: 0.8s;
+}
+
+.erro {
+    color: #ffe600;
+    font-weight: bold;
+    margin-top: 15px;
+}
+
+.coracao {
+    position: fixed;
+    top: -20px;
+    font-size: 24px;
+    animation: cair linear infinite;
+    opacity: 0.8;
+    pointer-events: none;
+}
+
+@keyframes cair {
+    to {
+        transform: translateY(110vh);
+    }
+}
+
+small {
+    opacity: 0.8;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+    <h1>Match do Amor da Turma ❤️</h1>
+    <p>Responda o quiz e descubra qual aluno combina mais com você!</p>
+
+    <input type="text" id="nomeJogador" placeholder="Digite seu nome">
+
+    <h2>Escolha exatamente 3 características:</h2>
+
+    <div class="caracteristicas" id="listaCaracteristicas"></div>
+
+    <p id="mensagemErro" class="erro"></p>
+
+    <button onclick="descobrirMatch()">Descobrir meu Match ❤️</button>
+
+    <div id="resultado"></div>
+
+    <button onclick="reiniciar()" id="botaoReiniciar" style="display:none;">Tentar novamente 🔄</button>
+</div>
+
+<script>
+// =============================
+// BANCO DE ALUNOS
+// =============================
+
+const alunos = [
+    { nome: "Warley", caracteristicas: ["gosta de música", "gosta de animais", "competitivo"] },
+    { nome: "Rebecca", caracteristicas: ["gamer", "esportista", "gosta de música"] },
+    { nome: "Rayssa", caracteristicas: ["gosta de música", "gosta de animais", "competitivo"] },
+    { nome: "Iorwerth", caracteristicas: ["tímido", "gamer", "gosta de música"] },
+    { nome: "Evandro", caracteristicas: ["tímido", "gosta de música", "competitivo"] },
+    { nome: "Henrique Gabriel", caracteristicas: ["tímido", "gamer", "criativo"] },
+    { nome: "Dáfiny Roberta", caracteristicas: ["gosta de música", "gosta de animais", "calmo"] },
+    { nome: "Rodrigo", caracteristicas: ["engraçado", "gamer", "competitivo"] },
+    { nome: "Maria Rita", caracteristicas: ["esportista", "gosta de música", "competitivo"] },
+    { nome: "Arthur", caracteristicas: ["tímido", "esportista", "competitivo"] },
+    { nome: "Josielly", caracteristicas: ["tímido", "gosta de música", "criativo"] },
+    { nome: "Cinthia", caracteristicas: ["gamer", "criativo", "competitivo"] },
+    { nome: "Renata", caracteristicas: ["gosta de música", "criativo", "competitivo"] },
+    { nome: "Andressa", caracteristicas: ["estudioso", "gosta de música", "criativo"] },
+    { nome: "Tarcísio", caracteristicas: ["tímido", "gosta de música", "competitivo"] },
+    { nome: "Natália", caracteristicas: ["gosta de música", "gosta de animais", "criativo"] },
+    { nome: "Brenno Bahia", caracteristicas: ["engraçado", "tímido", "gosta de música"] },
+    { nome: "Samuel", caracteristicas: ["engraçado", "gamer", "gosta de música"] },
+    { nome: "Lucas", caracteristicas: ["engraçado", "tímido", "gosta de música"] },
+    { nome: "Walison", caracteristicas: ["engraçado", "gamer", "gosta de animais"] },
+    { nome: "Ivan", caracteristicas: ["tímido", "gosta de animais", "calmo"] },
+    { nome: "Émerson Henrique", caracteristicas: ["engraçado", "gamer", "criativo"] },
+    { nome: "Luiz", caracteristicas: ["engraçado", "gosta de música", "criativo"] },
+    { nome: "Camilly", caracteristicas: ["tímido", "gosta de música", "gosta de animais"] },
+    { nome: "Yasmim", caracteristicas: ["gosta de animais", "criativo", "competitivo"] },
+    { nome: "Josimar", caracteristicas: ["tímido", "gosta de animais", "calmo"] },
+    { nome: "Maria Vitória", caracteristicas: ["esportista", "gosta de música", "competitivo"] },
+    { nome: "Évelyn", caracteristicas: ["esportista", "gosta de animais", "competitivo"] },
+    { nome: "Maísa", caracteristicas: ["tímido", "gosta de música", "competitivo"] },
+    { nome: "Pablyne", caracteristicas: ["gosta de música", "gosta de animais", "criativo"] },
+    { nome: "Cida", caracteristicas: ["engraçado", "gosta de música", "gosta de animais"] },
+    { nome: "Ryan", caracteristicas: ["engraçado", "estudioso", "gosta de música"] }
+];
+
+const opcoes = [
+    "engraçado",
+    "tímido",
+    "estudioso",
+    "gamer",
+    "esportista",
+    "gosta de música",
+    "gosta de animais",
+    "criativo",
+    "competitivo",
+    "calmo"
+];
+
+// =============================
+// MONTAR OPÇÕES NA TELA
+// =============================
+
+const lista = document.getElementById("listaCaracteristicas");
+
+opcoes.forEach(opcao => {
+    const label = document.createElement("label");
+    label.className = "opcao";
+    label.innerHTML = `
+        <input type="checkbox" value="${opcao}">
+        ${opcao}
+    `;
+
+    label.addEventListener("click", function() {
+        const checkbox = label.querySelector("input");
+
+        setTimeout(() => {
+            if (checkbox.checked) {
+                label.classList.add("selecionada");
+            } else {
+                label.classList.remove("selecionada");
+            }
+        }, 10);
+    });
+
+    lista.appendChild(label);
+});
+
+// =============================
+// FUNÇÃO PRINCIPAL DO MATCH
+// =============================
+
+function descobrirMatch() {
+    const nomeJogador = document.getElementById("nomeJogador").value.trim();
+    const checkboxes = document.querySelectorAll("input[type='checkbox']:checked");
+    const erro = document.getElementById("mensagemErro");
+    const resultado = document.getElementById("resultado");
+
+    erro.innerText = "";
+
+    if (nomeJogador === "") {
+        erro.innerText = "Digite seu nome primeiro!";
+        return;
+    }
+
+    if (checkboxes.length !== 3) {
+        erro.innerText = "Você precisa escolher exatamente 3 características!";
+        return;
+    }
+
+    const respostasJogador = Array.from(checkboxes).map(c => c.value);
+
+    let ranking = alunos.map(aluno => {
+        let iguais = aluno.caracteristicas.filter(carac => respostasJogador.includes(carac));
+        let pontos = iguais.length;
+        let porcentagem = Math.round((pontos / 3) * 100);
+
+        return {
+            nome: aluno.nome,
+            caracteristicas: aluno.caracteristicas,
+            iguais: iguais,
+            pontos: pontos,
+            porcentagem: porcentagem
+        };
+    });
+
+    ranking.sort((a, b) => b.pontos - a.pontos);
+
+    const top3 = ranking.slice(0, 3);
+
+    resultado.innerHTML = `
+        <h2>❤️ Resultado de ${nomeJogador} ❤️</h2>
+        <p>Seu match foi calculado com base nas características:</p>
+        <p><strong>${respostasJogador.join(", ")}</strong></p>
+    `;
+
+    top3.forEach((aluno, index) => {
+        let classe = index === 0 ? "card primeiro" : "card";
+
+        let textoIguais = aluno.iguais.length > 0 
+            ? aluno.iguais.join(", ")
+            : "nenhuma característica igual";
+
+        let frase = "";
+
+        if (aluno.porcentagem === 100) {
+            frase = "Combinação perfeita! 💘";
+        } else if (aluno.porcentagem >= 67) {
+            frase = "Combina bastante! ❤️";
+        } else if (aluno.porcentagem >= 34) {
+            frase = "Tem alguma conexão! 😉";
+        } else {
+            frase = "Match misterioso! 😅";
+        }
+
+        resultado.innerHTML += `
+            <div class="${classe}">
+                <h2>${index + 1}º lugar: ${aluno.nome}</h2>
+                <h3>${aluno.porcentagem}% de compatibilidade</h3>
+                <p>${frase}</p>
+                <p><strong>Características em comum:</strong> ${textoIguais}</p>
+                <small>Características do aluno: ${aluno.caracteristicas.join(", ")}</small>
+                <div class="barra">
+                    <div class="progresso" style="width:${aluno.porcentagem}%"></div>
+                </div>
+            </div>
+        `;
+    });
+
+    resultado.style.display = "block";
+    document.getElementById("botaoReiniciar").style.display = "inline-block";
+}
+
+// =============================
+// REINICIAR JOGO
+// =============================
+
+function reiniciar() {
+    document.getElementById("nomeJogador").value = "";
+    document.getElementById("resultado").style.display = "none";
+    document.getElementById("resultado").innerHTML = "";
+    document.getElementById("botaoReiniciar").style.display = "none";
+    document.getElementById("mensagemErro").innerText = "";
+
+    const checkboxes = document.querySelectorAll("input[type='checkbox']");
+    const labels = document.querySelectorAll(".opcao");
+
+    checkboxes.forEach(c => c.checked = false);
+    labels.forEach(l => l.classList.remove("selecionada"));
+}
+
+// =============================
+// CORAÇÕES CAINDO NO FUNDO
+// =============================
+
+function criarCoracao() {
+    const coracao = document.createElement("div");
+    coracao.className = "coracao";
+    coracao.innerText = "❤️";
+    coracao.style.left = Math.random() * 100 + "vw";
+    coracao.style.animationDuration = (Math.random() * 3 + 3) + "s";
+    coracao.style.fontSize = (Math.random() * 18 + 15) + "px";
+
+    document.body.appendChild(coracao);
+
+    setTimeout(() => {
+        coracao.remove();
+    }, 6000);
+}
+
+setInterval(criarCoracao, 500);
+</script>
+
+</body>
+</html>
